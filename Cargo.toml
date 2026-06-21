@@ -1,0 +1,19 @@
+[workspace]
+members = [
+    "crates/weact-display",
+    "crates/weact-display-serial",
+    "apps/weact-cli",
+]
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+serialport = "4.7"
+thiserror = "2.0"
+weact-display = { path = "crates/weact-display" }
+weact-display-serial = { path = "crates/weact-display-serial" }

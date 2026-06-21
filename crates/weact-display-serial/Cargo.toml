@@ -1,0 +1,9 @@
+[package]
+name = "weact-display-serial"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serialport.workspace = true
+weact-display.workspace = true
