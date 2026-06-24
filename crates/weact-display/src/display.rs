@@ -105,7 +105,8 @@ impl<T: Transport> WeActDisplay<T> {
             });
         }
 
-        self.transport.write_all(&protocol::fill_rect(x, y, width, height, color))?;
+        self.transport
+            .write_all(&protocol::fill_rect(x, y, width, height, color))?;
         self.transport.flush()?;
         Ok(())
     }
@@ -129,7 +130,8 @@ impl<T: Transport> WeActDisplay<T> {
             });
         }
 
-        self.transport.write_all(&protocol::set_bitmap_header(0, 0, self.width, self.height))?;
+        self.transport
+            .write_all(&protocol::set_bitmap_header(0, 0, self.width, self.height))?;
 
         // Larger displays may want row streaming to avoid building a full byte vector first.
         let bytes = framebuffer.as_rgb565_le_bytes();

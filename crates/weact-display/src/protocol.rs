@@ -103,7 +103,11 @@ pub fn set_brightness(percent: u8) -> [u8; 5] {
     let converted = ((percent as u16 * 255) / 100) as u8;
     let transition_ms = 1000_u16.to_le_bytes();
     [
-        CMD_SET_BRIGHTNESS, converted, transition_ms[0], transition_ms[1], CMD_END,
+        CMD_SET_BRIGHTNESS,
+        converted,
+        transition_ms[0],
+        transition_ms[1],
+        CMD_END,
     ]
 }
 
@@ -131,7 +135,16 @@ pub fn set_bitmap_header(x: u16, y: u16, width: u16, height: u16) -> [u8; 10] {
     let x1 = x.saturating_add(width).saturating_sub(1).to_le_bytes();
     let y1 = y.saturating_add(height).saturating_sub(1).to_le_bytes();
     [
-        CMD_SET_BITMAP, x0[0], x0[1], y0[0], y0[1], x1[0], x1[1], y1[0], y1[1], CMD_END,
+        CMD_SET_BITMAP,
+        x0[0],
+        x0[1],
+        y0[0],
+        y0[1],
+        x1[0],
+        x1[1],
+        y1[0],
+        y1[1],
+        CMD_END,
     ]
 }
 
