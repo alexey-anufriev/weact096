@@ -3,7 +3,7 @@
 use anyhow::{Result, bail};
 use clap::{Parser, Subcommand, ValueEnum};
 use weact_display::{Framebuffer, Orientation, Rgb565, WeActDisplay};
-use weact_display_serial::SerialTransport;
+use weact_display_serial::{SerialTransport, find_ports_by_name};
 
 /// Parsed command-line arguments.
 ///
@@ -19,11 +19,22 @@ struct Args {
 /// CLI subcommands.
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Find serial ports by USB product name.
+    FindPort {
+        /// USB product name to search for.
+        #[arg(long, default_value = "Display FS 0.96 Inch")]
+        name: String,
+    },
+
     /// Fill the display with one named color.
     Fill {
         /// Serial device path, such as `/dev/ttyACM0` on Linux.
         #[arg(long)]
-        port: String,
+        port: Option<String>,
+
+        /// USB product name to use when `--port` is omitted.
+        #[arg(long, default_value = "Display FS 0.96 Inch")]
+        name: String,
 
         /// Color to draw.
         #[arg(long, value_enum, default_value_t = NamedColor::Red)]
@@ -89,18 +100,34 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     match args.command {
+        Command::FindPort { name } => find_port(&name),
         Command::Fill {
             port,
+            name,
             color,
             orientation,
             brightness,
-        } => fill(&port, color, orientation.into(), brightness),
+        } => fill(port, &name, color, orientation.into(), brightness),
     }
+}
+
+/// Runs the `find-port` subcommand.
+fn find_port(name: &str) -> Result<()> {
+    let ports = find_ports_by_name(name)?;
+    if ports.is_empty() {
+        bail!("no serial ports found with USB product name containing `{name}`");
+    }
+
+    for port in ports {
+        println!("{port}");
+    }
+    Ok(())
 }
 
 /// Runs the `fill` subcommand.
 fn fill(
-    port: &str,
+    port: Option<String>,
+    name: &str,
     color: NamedColor,
     orientation: Orientation,
     brightness: Option<u8>,
@@ -111,7 +138,8 @@ fn fill(
         }
     }
 
-    let transport = SerialTransport::open(port)?;
+    let port = resolve_port(port, name)?;
+    let transport = SerialTransport::open(&port)?;
     let mut display = WeActDisplay::new(transport, orientation);
     display.init()?;
 
@@ -126,4 +154,20 @@ fn fill(
     framebuffer.clear(color.rgb565());
     display.draw_framebuffer(&framebuffer)?;
     Ok(())
+}
+
+fn resolve_port(port: Option<String>, name: &str) -> Result<String> {
+    if let Some(port) = port {
+        return Ok(port);
+    }
+
+    let ports = find_ports_by_name(name)?;
+    match ports.as_slice() {
+        [] => bail!("no serial ports found with USB product name containing `{name}`"),
+        [port] => Ok(port.clone()),
+        _ => bail!(
+            "multiple serial ports found for `{name}`: {}. Pass one explicitly with --port",
+            ports.join(", ")
+        ),
+    }
 }
