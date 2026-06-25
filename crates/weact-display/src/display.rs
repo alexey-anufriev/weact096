@@ -92,8 +92,8 @@ impl<T: Transport> WeActDisplay<T> {
         let y_end = y.checked_add(height);
         if width == 0
             || height == 0
-            || x_end.map_or(true, |end| end > self.width)
-            || y_end.map_or(true, |end| end > self.height)
+            || x_end.is_none_or(|end| end > self.width)
+            || y_end.is_none_or(|end| end > self.height)
         {
             return Err(Error::RectOutOfBounds {
                 x,
