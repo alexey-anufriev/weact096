@@ -9,7 +9,7 @@
 use std::io::{self, Write};
 use std::time::Duration;
 
-use serialport::{FlowControl, SerialPort};
+use serialport::{FlowControl, SerialPort, SerialPortType};
 use weact_display::{Transport, TransportError};
 
 /// Serial-port transport for the WeAct USB CDC device.
@@ -47,4 +47,20 @@ impl Transport for SerialTransport {
     fn flush(&mut self) -> Result<(), TransportError> {
         self.port.flush().map_err(TransportError::from)
     }
+}
+
+/// Finds serial ports whose USB product name contains `name`.
+pub fn find_ports_by_name(name: &str) -> serialport::Result<Vec<String>> {
+    let name = name.to_ascii_lowercase();
+    let ports = serialport::available_ports()?
+        .into_iter()
+        .filter_map(|port| match port.port_type {
+            SerialPortType::UsbPort(info) => info
+                .product
+                .filter(|product| product.to_ascii_lowercase().contains(&name))
+                .map(|_| port.port_name),
+            _ => None,
+        })
+        .collect();
+    Ok(ports)
 }
